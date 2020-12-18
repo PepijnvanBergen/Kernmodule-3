@@ -29,9 +29,9 @@ public class AttackBehaviour : AIBehaviour
         if (hasWeapon)
         {
             AgentEnemy.targetPosition = Player.playerLocation;
-            Debug.Log(distanceToPlayer);
+            //Debug.Log(distanceToPlayer);
             float timer = 2;
-            if (timer > 0 && distanceToPlayer < 5)
+            if (timer < 0 && distanceToPlayer < 5)
             {
                 timer = 2;
                 Debug.Log("Enemy Attack");

@@ -17,7 +17,7 @@ public class AgentEnemy : MonoBehaviour, IDamageable
     [SerializeField]
     private float health;
 
-    public bool isStunned = false;
+    public static bool isStunned = false;
     public static Vector3 targetPosition;
 
     [Header("Gameobjects")]
@@ -27,6 +27,7 @@ public class AgentEnemy : MonoBehaviour, IDamageable
     public BlackBoard BlackBoard { get; private set; }
 
     private NavMeshAgent agent;
+    float stunTimer = 0.5f;
 
     private void Start()
     {
@@ -45,32 +46,44 @@ public class AgentEnemy : MonoBehaviour, IDamageable
     // Update is called once per frame
     private void Update()
     {
-        //FloatValue.
-        AISelector.OnUpdate();
+        if (isStunned)
+        {
+            if (stunTimer < 0)
+            {
+                stunTimer = 3f;
+                agent.speed = 3.5f;
+                isStunned = false;
+                TakeDamage(2);
 
+            }
+            else
+            {
+                stunTimer -= Time.deltaTime;
+                agent.speed = 0;
+            }
+        }
+        else
+        {
+            //FloatValue.
+            AISelector.OnUpdate();
+        }
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            TakeDamage(10);
+            TakeDamage(1);
         }
         FloatValue distance = BlackBoard.GetFloatVariableValue(VariableType.Distance);
-        distance.Value = transform.position.magnitude;
+        FloatValue hp = BlackBoard.GetFloatVariableValue(VariableType.Health);
+        hp.Value = health;
+        distance.Value = (Player.playerLocation - transform.position).magnitude;
         agent.SetDestination(targetPosition); //Deze werkt pas als de behaviours werken.
-        //agent.SetDestination(Player.playerLocation);
     }
 
     public void TakeDamage(float damage)
     {
         health -= damage;
-        CheckHealth(health);
-        FloatValue hp = BlackBoard.GetFloatVariableValue(VariableType.Health);
-        if (hp)
-        {
-            hp.Value -= damage;
-        }
+
         AISelector.EvaluateBehaviours();
-    }
-    public void CheckHealth(float health)
-    {
+
         if (health < 0)
         {
             Destroy(this);
@@ -98,22 +111,6 @@ public class AgentEnemy : MonoBehaviour, IDamageable
     }
     public bool inFOV(Transform checkingObject, Transform target, float maxAngle, float maxRadius)
     {
-        float stunTimer = 0.5f;
-        if (isStunned)
-        {
-            stunTimer -= Time.deltaTime;
-            if (stunTimer < 0)
-            {
-                stunTimer = 0.5f;
-                isStunned = false;
-            }
-            else
-            {
-                stunTimer -= Time.deltaTime;
-            }
-        }
-        else
-        {
             Vector3 directionBetween = (target.position - checkingObject.position).normalized;
             directionBetween.y *= 0;
             RaycastHit hit;
@@ -128,8 +125,6 @@ public class AgentEnemy : MonoBehaviour, IDamageable
                     }
                 }
             }
-        }
-
         return false;
     }
 }

@@ -12,14 +12,12 @@ public class HideBehaviour : AIBehaviour
     private AgentEnemy AE;
     [SerializeField]
     private Transform[] HidePoints;
-    private Transform closeSafeHideSpot;
-    int layerMask;
+    private Vector3 hideTarget;
     private float timer = 1;
 
 
     public override void OnEnter()
     {
-        layerMask = LayerMask.GetMask("Ground", "Enemy");
         Debug.Log("Ally Entering HideState");
         hasAttacked = false;
         ipf = Instantiate(IndicatorPrefab, transform.position + new Vector3(0, 4, 0), Quaternion.identity);
@@ -29,18 +27,16 @@ public class HideBehaviour : AIBehaviour
         if (!isHidden)
         {
             Transform closeHideSpot = HidePoints.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
-            AgentEnemy.targetPosition = closeHideSpot.transform.position;
-            Debug.Log("close hide spot" + closeHideSpot.transform.position);
-            Debug.Log("transform.position" + transform.position);
+            hideTarget = closeHideSpot.transform.position;
+            AgentAlly.targetPosition = hideTarget;
         }
         else
         {
-            if (timer > 0)
+            if (timer < 0)
             {
-                timer = 1;
+                timer = 5;
                 Debug.Log("Ally Throwing smokebomb");
-                AE.TakeDamage(1);
-                AE.isStunned = true;
+                AgentEnemy.isStunned = true;
             }
             else
             {
@@ -57,6 +53,14 @@ public class HideBehaviour : AIBehaviour
             isHidden = true;
         }
     }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "HidePoints")
+        {
+            isHidden = false;
+        }
+    }
+
     public override void OnExit()
     {
         Debug.Log("Ally Leaving HideState");
